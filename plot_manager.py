@@ -13,9 +13,6 @@ from data_buffer import (
 from data_collector import data_queue
 from motion_processor import process_motion_data
 
-def safe_slice(data_list):
-    return data_list[-MAX_POINTS:]
-
 class RealTimePlotWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -50,9 +47,9 @@ class RealTimePlotWindow(QtWidgets.QMainWindow):
         for title, keys in plot_titles:
             plot = pg.PlotWidget(title=title)
             plot.setLabel('left', 'Value')
-            plot.setLabel('bottom', 'Samples (Last 6s)')
+            plot.setLabel('bottom', 'Time (s)')  # 修改标签为时间
             plot.addLegend()
-            plot.setXRange(0, MAX_POINTS)
+            plot.setXRange(0, 6)  # 设置 x 轴范围为 0 - 6
             plot.setYRange(*y_ranges[title])
             layout.addWidget(plot)
             self.plots.append(plot)
@@ -64,7 +61,7 @@ class RealTimePlotWindow(QtWidgets.QMainWindow):
 
         self.timer = pg.QtCore.QTimer()
         self.timer.timeout.connect(self.update_data)
-        self.timer.start(10)
+        self.timer.start(50)
 
     def update_data(self):
         while not data_queue.empty():
@@ -72,25 +69,25 @@ class RealTimePlotWindow(QtWidgets.QMainWindow):
             update_buffers(data)
             process_motion_data()
 
-        self.curves['acc_x'].setData(safe_slice(acc_x_data))
-        self.curves['acc_y'].setData(safe_slice(acc_y_data))
-        self.curves['acc_z'].setData(safe_slice(acc_z_data))
+        self.curves['acc_x'].setData((acc_x_data))
+        self.curves['acc_y'].setData((acc_y_data))
+        self.curves['acc_z'].setData((acc_z_data))
 
-        self.curves['gyro_x'].setData(safe_slice(gyro_x_data))
-        self.curves['gyro_y'].setData(safe_slice(gyro_y_data))
-        self.curves['gyro_z'].setData(safe_slice(gyro_z_data))
+        self.curves['gyro_x'].setData((gyro_x_data))
+        self.curves['gyro_y'].setData((gyro_y_data))
+        self.curves['gyro_z'].setData((gyro_z_data))
 
-        self.curves['roll'].setData(safe_slice(roll_data))
-        self.curves['pitch'].setData(safe_slice(pitch_data))
-        self.curves['yaw'].setData(safe_slice(yaw_data))
+        self.curves['roll'].setData((roll_data))
+        self.curves['pitch'].setData((pitch_data))
+        self.curves['yaw'].setData((yaw_data))
 
-        self.curves['vel_x'].setData(safe_slice(velocity_x_data))
-        self.curves['vel_y'].setData(safe_slice(velocity_y_data))
-        self.curves['vel_z'].setData(safe_slice(velocity_z_data))
+        self.curves['vel_x'].setData((velocity_x_data))
+        self.curves['vel_y'].setData(velocity_y_data)
+        self.curves['vel_z'].setData(velocity_z_data)
 
-        self.curves['disp_x'].setData(safe_slice(displacement_x_data))
-        self.curves['disp_y'].setData(safe_slice(displacement_y_data))
-        self.curves['disp_z'].setData(safe_slice(displacement_z_data))
+        self.curves['disp_x'].setData(displacement_x_data)
+        self.curves['disp_y'].setData(displacement_y_data)
+        self.curves['disp_z'].setData(displacement_z_data)
 
 def run_plot():
     app = QtWidgets.QApplication(sys.argv)

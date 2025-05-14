@@ -21,39 +21,42 @@ start_time = time.time()
 def GetDeviceData():
     """
     模拟绑定在杠铃上的IMU传感器数据。
-    返回包含时间戳、加速度、角速度、姿态角的数据对象。
-    加速度每3秒波动一次，然后静止3秒，循环往复。
+    acc_z 分阶段模拟深蹲的竖直加速度变化，不使用正弦波。
     """
     time.sleep(0.01)
     timestamp = time.time()
     base_time = timestamp - start_time
 
-    # 波动状态判断（每6秒一个周期）
+    g = 0  # 重力加速度
     cycle = 6.0
-    within_cycle = base_time % cycle
-    is_vibrating = within_cycle < 3.0  # 前3秒波动，后3秒静止
+    t = base_time % cycle
 
-    # 加速度
-    acc_base = [0.0, 0.0, 0.0]
-    if is_vibrating:
-        vibration = np.random.normal(0, 1, size=3)
-        acc = np.array(acc_base) + vibration
+    # 模拟 acc_z（竖直加速度）的变化
+    if t < 0.5:
+        acc_z = g + np.random.normal(0, 0.02)  # 静止准备
+    elif t < 2.0:
+        acc_z = g - np.random.uniform(0.5, 1.8) + np.random.normal(0, 0.05)  # 下蹲加速
+    elif t < 3.0:
+        acc_z = g + np.random.normal(0, 0.02)  # 底部静止
+    elif t < 4.5:
+        acc_z = g + np.random.uniform(0.5, 1.5) + np.random.normal(0, 0.05)  # 起身加速
     else:
-        acc = np.array(acc_base)
+        acc_z = g + np.random.normal(0, 0.02)  # 回到静止
 
-    # 角速度
-    base_gyro = [0.0, 0.0, 0.0]
-    gyro_noise = np.random.normal(0, 0.0, size=3)
-    gyro = np.array(base_gyro) + gyro_noise
+    # 水平方向加速度：小幅扰动
+    acc_x = np.random.normal(0, 0.02)
+    acc_y = np.random.normal(0, 0.02)
 
-    # 姿态角
-    roll = 0.0
-    pitch = 0.0
-    yaw = 0.0
+    # 角速度：微小扰动
+    gyro = np.random.normal(0, 0.01, size=3)
+
+    # 姿态角：暂时设为静止
+    roll = pitch = yaw = 0.0
 
     return SensorData(
         timestamp=timestamp,
-        acc_x=acc[0], acc_y=acc[1], acc_z=acc[2],
+        acc_x=acc_x, acc_y=acc_y, acc_z=acc_z,
         gyro_x=gyro[0], gyro_y=gyro[1], gyro_z=gyro[2],
         roll=roll, pitch=pitch, yaw=yaw
     )
+

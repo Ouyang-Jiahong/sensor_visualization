@@ -1,6 +1,8 @@
 # data_collector.py
 import threading
 import queue
+import time
+
 import sensor_data
 
 data_queue = queue.Queue()

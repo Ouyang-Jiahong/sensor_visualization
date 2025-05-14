@@ -1,5 +1,5 @@
 # data_buffer.py
-MAX_POINTS = 600
+MAX_POINTS = 300
 
 # 初始化数据缓冲区
 acc_x_data = []
