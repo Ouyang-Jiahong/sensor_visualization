@@ -1,0 +1,44 @@
+# Python 编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc~
+*.db
+*.sqlite3
+
+# 虚拟环境
+venv/
+env/
+ENV/
+virtualenv/
+.build/
+
+# IDE 配置文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+*.sublime-project
+*.sublime-workspace
+
+# 日志和缓存
+*.log
+.ipynb_checkpoints/
+__pycache__/
+*.DS_Store
+Thumbs.db
+
+# matplotlib 缓存
+.matplotlib/
+
+# 数据输出目录（可选）
+data/
+output/
+results/
+
+# 分发包
+dist/
+build/
+*.egg-info/
