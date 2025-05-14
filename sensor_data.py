@@ -1,8 +1,10 @@
 # sensor_data.py
-import time
 import math
-import numpy as np
+import time
 from dataclasses import dataclass
+
+import numpy as np
+
 
 @dataclass
 class SensorData:
@@ -27,7 +29,7 @@ def GetDeviceData():
 
     # 加速度
     acc_base = [0.0, 0.0, 9.8]
-    vibration = np.random.normal(0, 0.5, size=3)
+    vibration = np.random.normal(0, 0.1, size=3)
     acc = np.array(acc_base) + vibration
 
     # 角速度

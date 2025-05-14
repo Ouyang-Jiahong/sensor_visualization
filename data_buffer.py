@@ -15,8 +15,20 @@ roll_data = []
 pitch_data = []
 yaw_data = []
 
+velocity_x_data = []
+velocity_y_data = []
+velocity_z_data = []
+
+displacement_x_data = []
+displacement_y_data = []
+displacement_z_data = []
+
+timestamps = []
+
 def update_buffers(data):
     """更新缓冲区"""
+    timestamps.append(data.timestamp)
+    
     acc_x_data.append(data.acc_x)
     acc_y_data.append(data.acc_y)
     acc_z_data.append(data.acc_z)
@@ -31,6 +43,7 @@ def update_buffers(data):
 
     # 控制缓存长度
     if len(acc_x_data) > MAX_POINTS:
+        timestamps.pop(0)
         acc_x_data.pop(0)
         acc_y_data.pop(0)
         acc_z_data.pop(0)
@@ -40,3 +53,9 @@ def update_buffers(data):
         roll_data.pop(0)
         pitch_data.pop(0)
         yaw_data.pop(0)
+        velocity_x_data.pop(0)
+        velocity_y_data.pop(0)
+        velocity_z_data.pop(0)
+        displacement_x_data.pop(0)
+        displacement_y_data.pop()
+        displacement_z_data.pop(0)
