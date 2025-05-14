@@ -1,6 +1,6 @@
 # motion_processor.py
 import time
-from data_buffer import timestamps
+from data_buffer import timestamps, MAX_POINTS, append_velocity, append_displacement
 from data_buffer import (
     acc_x_data, acc_y_data, acc_z_data,
     velocity_x_data, velocity_y_data, velocity_z_data,
@@ -10,7 +10,6 @@ import numpy as np
 
 # 参数设置
 ZERO_SPEED_THRESHOLD = 0.15     # 静止判断阈值 (m/s²)
-MAX_POINTS = 200                # 最大数据长度（用于初始化 drift_estimators）
 
 # 初始化漂移估计器（用于X/Y/Z轴）
 drift_estimators = {
@@ -43,12 +42,16 @@ def compute_velocity_and_displacement(timestamps, accelerations, axis='x'):
     velocities = []
     displacements = []
 
+    if len(timestamps) < 2:        
+        return [], []
     last_time = timestamps[0]
     velocity = 0.0
     displacement = 0.0
 
     for t, a in zip(timestamps, accelerations):
         dt = t - last_time
+        if dt <= 0:
+            continue
 
         if is_zero_velocity(a):
             drift = update_drift_estimator(axis, a)
@@ -71,19 +74,12 @@ def process_motion_data():
     """主处理函数：根据当前加速度数据更新速度和位移"""
 
     # 处理 X 轴
-    vx, dx = compute_velocity_and_displacement(acc_x_data, timestamps, axis='x')
-    velocity_x_data.extend(vx)
-    displacement_x_data.extend(dx)
-
-    # 处理 Y 轴
-    vy, dy = compute_velocity_and_displacement(acc_y_data, timestamps, axis='y')
-    velocity_y_data.extend(vy)
-    displacement_y_data.extend(dy)
-
-    # 处理 Z 轴
-    vz, dz = compute_velocity_and_displacement(acc_z_data, timestamps, axis='z')
-    velocity_z_data.extend(vz)
-    displacement_z_data.extend(dz)
+    vx, dx = compute_velocity_and_displacement(timestamps, acc_x_data, axis='x')
+    vy, dy = compute_velocity_and_displacement(timestamps, acc_y_data, axis='y')
+    vz, dz = compute_velocity_and_displacement(timestamps, acc_z_data, axis='z')
+    if vx and dx:
+        append_velocity(vx[-1], vy[-1], vz[-1])
+        append_displacement(dx[-1], dy[-1], dz[-1])
 
     # 控制缓存长度
     for lst in [
