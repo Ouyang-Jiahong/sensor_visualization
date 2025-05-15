@@ -1,3 +1,4 @@
+# sensor_data.py
 import math
 import time
 from dataclasses import dataclass

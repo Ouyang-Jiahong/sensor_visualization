@@ -13,7 +13,6 @@ device_ready = Event()
 def on_data_received(device):
     update_callback(device)
     update_buffers(latest_sensor_data)
-    print(latest_sensor_data)
     if not device_ready.is_set():
         device_ready.set()
 
@@ -83,6 +82,7 @@ def GetDeviceData() -> SensorData:
     与 sensor_data.py 同接口：获取最新真实传感器数据。
     """
     if device_ready.wait(timeout=5.0):
+        print(latest_sensor_data)
         return latest_sensor_data
     else:
         print("No sensor data received yet.")
