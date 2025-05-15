@@ -10,7 +10,6 @@ from data_buffer import (
     velocity_x_data, velocity_y_data, velocity_z_data,
     displacement_x_data, displacement_y_data, displacement_z_data, update_buffers, MAX_POINTS
 )
-from data_collector import data_queue
 from motion_processor import process_motion_data
 
 class RealTimePlotWindow(QtWidgets.QMainWindow):
@@ -64,24 +63,19 @@ class RealTimePlotWindow(QtWidgets.QMainWindow):
         self.timer.start(50)
 
     def update_data(self):
-        while not data_queue.empty():
-            data = data_queue.get()
-            update_buffers(data)
-            process_motion_data()
+        self.curves['acc_x'].setData(acc_x_data)
+        self.curves['acc_y'].setData(acc_y_data)
+        self.curves['acc_z'].setData(acc_z_data)
 
-        self.curves['acc_x'].setData((acc_x_data))
-        self.curves['acc_y'].setData((acc_y_data))
-        self.curves['acc_z'].setData((acc_z_data))
+        self.curves['gyro_x'].setData(gyro_x_data)
+        self.curves['gyro_y'].setData(gyro_y_data)
+        self.curves['gyro_z'].setData(gyro_z_data)
 
-        self.curves['gyro_x'].setData((gyro_x_data))
-        self.curves['gyro_y'].setData((gyro_y_data))
-        self.curves['gyro_z'].setData((gyro_z_data))
+        self.curves['roll'].setData(roll_data)
+        self.curves['pitch'].setData(pitch_data)
+        self.curves['yaw'].setData(yaw_data)
 
-        self.curves['roll'].setData((roll_data))
-        self.curves['pitch'].setData((pitch_data))
-        self.curves['yaw'].setData((yaw_data))
-
-        self.curves['vel_x'].setData((velocity_x_data))
+        self.curves['vel_x'].setData(velocity_x_data)
         self.curves['vel_y'].setData(velocity_y_data)
         self.curves['vel_z'].setData(velocity_z_data)
 
