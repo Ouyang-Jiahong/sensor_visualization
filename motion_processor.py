@@ -1,69 +1,40 @@
-import time
-from data_buffer import timestamps, MAX_POINTS, update_velocity, update_displacement
-from data_buffer import (
-    acc_x_data, acc_y_data, acc_z_data,
-    velocity_x_data, velocity_y_data, velocity_z_data,
-    displacement_x_data, displacement_y_data, displacement_z_data
-)
 import numpy as np
-
-# 参数设置
-ZERO_SPEED_THRESHOLD = 0.15     # 静止判断阈值 (m/s²)
-
-# 初始化漂移估计
-drift_x = 0
-drift_y = 0
-drift_z = 0
-
-def is_zero_velocity(acc):
-    """简单判断是否处于静止状态"""
-    return abs(acc) < ZERO_SPEED_THRESHOLD
-
-def update_drift(drift, acc):
-    """根据静止阶段的数据估计漂移量"""
-    if is_zero_velocity(acc):
-        drift = 0.9 * drift + 0.1 * acc  # 简单的指数加权平均
-    return drift
-
-def compute_integration(timestamps, accelerations, drift):
-    """
-    输入：时间戳列表、加速度列表、漂移量
-    输出：速度、位移
-    """
-    if len(timestamps) < 2:        
-        return 0, 0
-
-    # 修正加速度
-    corrected_acc = np.array(accelerations) - drift
-
-    # 计算时间间隔
-    dt = np.diff(timestamps)
-
-    # 积分计算速度
-    velocity = np.sum(corrected_acc[:-1] * dt)
-
-    # 零速修正
-    if is_zero_velocity(np.mean(accelerations)):
-        velocity = 0
-
-    # 积分计算位移
-    displacement = np.sum(velocity * dt)
-
-    return velocity, displacement
+import remove_gravity
+from data_buffer import (
+    timestamps, MAX_POINTS, update_velocity, update_displacement,
+    acc_x_data, acc_y_data, acc_z_data,
+    gyro_x_data, gyro_y_data, gyro_z_data,
+    velocity_x_data, velocity_y_data, velocity_z_data,
+    displacement_x_data, displacement_y_data, displacement_z_data,
+    roll_data, yaw_data, pitch_data,
+)
 
 def process_motion_data():
-    """主处理函数：根据当前加速度数据更新速度和位移"""
-    global drift_x, drift_y, drift_z
-
-    # 更新漂移估计
-    drift_x = update_drift(drift_x, acc_x_data[-1])
-    drift_y = update_drift(drift_y, acc_y_data[-1])
-    drift_z = update_drift(drift_z, acc_z_data[-1])
-
-    # 计算积分
-    vx, dx = compute_integration(timestamps, acc_x_data, drift_x)
-    vy, dy = compute_integration(timestamps, acc_y_data, drift_y)
-    vz, dz = compute_integration(timestamps, acc_z_data, drift_z)
+    
+    # 得到去除重力影响的加速度，用于积分计算
+    pure_acc = remove_gravity.remove_gravity(
+        acc_x_data[-1], acc_y_data[-1], acc_z_data[-1],
+        roll_data[-1], pitch_data[-1], yaw_data[-1]
+    )
+    # print(pure_acc)
+    # 首先将零速区间的判断所需条件计算出来
+    # 计算模长用于零速判断
+    acc_norm = np.linalg.norm(pure_acc)
+    gyro_norm = np.linalg.norm([
+        gyro_x_data[-1],
+        gyro_y_data[-1],
+        gyro_z_data[-1]
+    ])
+    
+    if is_zero_velocity(acc_norm, gyro_norm):
+        vx, vy, vz = 0, 0, 0  # 零速修正
+        dx, dy, dz = 0, 0, 0 
+    
+    else:
+        # 如果不是处于零速状态，则处理最后一个数据点，然后积分得到最新的速度
+        vx, dx = compute_velocity_displacement(timestamps, acc_x_data)
+        vy, dy = compute_velocity_displacement(timestamps, acc_y_data)
+        vz, dz = compute_velocity_displacement(timestamps, acc_z_data)
 
     update_velocity(vx, vy, vz)
     update_displacement(dx, dy, dz)
@@ -75,3 +46,23 @@ def process_motion_data():
     ]:
         while len(lst) > MAX_POINTS:
             lst.pop(0)
+
+def compute_velocity_displacement(timestamps, acc_data):
+    """
+    单轴速度和位移计算
+    """
+    if len(timestamps) < 2:
+        return 0, 0
+
+    dt = np.diff(timestamps)
+    corrected_acc = np.array(acc_data)
+    velocity = np.sum(corrected_acc[:-1] * dt)
+    displacement = np.sum(velocity * dt)
+
+    return velocity, displacement
+
+def is_zero_velocity(acc_norm, gyro_norm, acc_thresh=0.3, gyro_thresh=0.1):
+    """
+    综合加速度和角速度判断是否为零速
+    """
+    return acc_norm < acc_thresh and gyro_norm < gyro_thresh

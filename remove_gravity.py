@@ -53,10 +53,5 @@ def remove_gravity(acc_x, acc_y, acc_z, roll_deg, pitch_deg, yaw_deg):
     # 构建加速度向量
     acc = np.array([acc_x, acc_y, acc_z])
 
-    print("##########################\n")
-    print(acc)
-    print(gravity_sensor)
-    print(acc - gravity_sensor)
-
     # 减去重力得到纯加速度
     return acc - gravity_sensor
