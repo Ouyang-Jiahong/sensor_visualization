@@ -35,10 +35,6 @@ class SensorData:
 # 初始化 latest_sensor_data 为 None
 latest_sensor_data = None
 
-def update_sensor_data(new_data):
-    global latest_sensor_data
-    latest_sensor_data = new_data
-
 device_ready = threading.Event()
 
 def update_callback(device: DeviceModel):
@@ -77,15 +73,3 @@ def start_ble_device(mac_address: str):
 
     thread = threading.Thread(target=_thread_entry, daemon=True)
     thread.start()
-
-
-def GetDeviceData() -> SensorData:
-    """
-    与 sensor_data.py 同接口：获取最新真实传感器数据。
-    """
-    if device_ready.wait(timeout=5.0):
-        print(latest_sensor_data)
-        return latest_sensor_data
-    else:
-        print("No sensor data received yet.")
-        return None
