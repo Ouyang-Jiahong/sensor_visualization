@@ -56,7 +56,7 @@ def update_buffers(data):
         pitch_data.pop(0)
         yaw_data.pop(0)
 
-def append_velocity(vx, vy, vz):
+def update_velocity(vx, vy, vz):
     velocity_x_data.append(vx)
     velocity_y_data.append(vy)
     velocity_z_data.append(vz)
@@ -66,7 +66,7 @@ def append_velocity(vx, vy, vz):
         velocity_y_data.pop(0)
         velocity_z_data.pop(0)
 
-def append_displacement(dx, dy, dz):
+def update_displacement(dx, dy, dz):
     displacement_x_data.append(dx)
     displacement_y_data.append(dy)
     displacement_z_data.append(dz)

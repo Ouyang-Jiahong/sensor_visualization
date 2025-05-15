@@ -7,12 +7,14 @@ from device_model import DeviceModel
 import asyncio
 import threading
 from threading import Event
+from motion_processor import process_motion_data
 
 device_ready = Event()
 
 def on_data_received(device):
     update_callback(device)
     update_buffers(latest_sensor_data)
+    process_motion_data()
     if not device_ready.is_set():
         device_ready.set()
 
