@@ -1,6 +1,8 @@
 # device_data.py
 import time
 from dataclasses import dataclass
+
+from data_buffer import update_buffers
 from device_model import DeviceModel
 import asyncio
 import threading
@@ -10,10 +12,8 @@ device_ready = Event()
 
 def on_data_received(device):
     update_callback(device)
-
-    from data_collector import data_queue
-    data_queue.put(latest_sensor_data)
-    # print(latest_sensor_data)
+    update_buffers(latest_sensor_data)
+    print(latest_sensor_data)
     if not device_ready.is_set():
         device_ready.set()
 
