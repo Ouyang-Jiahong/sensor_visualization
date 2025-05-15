@@ -1,5 +1,5 @@
 # data_buffer.py
-MAX_POINTS = 300
+MAX_POINTS = 600
 
 # 初始化数据缓冲区
 acc_x_data = []
@@ -14,7 +14,6 @@ roll_data = []
 pitch_data = []
 yaw_data = []
 
-# 留给 motion_processor.py 更新
 velocity_x_data = []
 velocity_y_data = []
 velocity_z_data = []
@@ -57,7 +56,6 @@ def update_buffers(data):
         pitch_data.pop(0)
         yaw_data.pop(0)
 
-# 以下函数供 motion_processor.py 调用
 def append_velocity(vx, vy, vz):
     velocity_x_data.append(vx)
     velocity_y_data.append(vy)

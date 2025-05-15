@@ -1,15 +1,7 @@
 # data_collector.py
 import threading
-import queue
-import time
 
-import sensor_data
+import device_data
 
-data_queue = queue.Queue()
-
-def data_collector():
-    while True:
-        data = sensor_data.GetDeviceData()
-        data_queue.put(data)
-
-collector_thread = threading.Thread(target=data_collector, daemon=True)
+device_data.start_ble_device("D9:7C:FB:58:D8:C2")  # 填入你的传感器 MAC 地址
+collector_thread = threading.Thread(target=device_data.on_data_received, daemon=True)
