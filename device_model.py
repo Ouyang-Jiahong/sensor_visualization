@@ -82,9 +82,18 @@ class DeviceModel:
                         break
 
             if self.writer_characteristic:
-                # 读取磁场四元数 Reading magnetic field quaternions
-                print("Reading magnetic field quaternions")
-                time.sleep(3)
+                print("Initializing sensor settings...")
+
+                # 启动 writeReg 初始化配置
+                self.set_algorithm_6axis()  # 设置为6轴算法
+                # self.set_transmission_rate200()  # 设置传输速率为200Hz
+                self.set_transmission_rate100()  # 设置传输速率为100Hz
+                # 可以继续添加其他配置
+
+                print("Initialization complete.")
+
+                # 开始定时读取数据
+                time.sleep(0.5)
                 asyncio.create_task(self.sendDataTh())
 
             if notify_characteristic:
@@ -202,8 +211,6 @@ class DeviceModel:
     async def writeReg(self, regAddr, sValue):
         # 解锁 unlock
         self.unlock()
-        # 延迟100ms Delay 100ms
-        time.sleep(0.1)
         # 封装写入指令并向串口发送数据
         await self.sendData(self.get_writeBytes(regAddr, sValue))
         # 延迟100ms Delay 100ms
@@ -243,4 +250,25 @@ class DeviceModel:
     # 保存 save
     def save(self):
         cmd = self.get_writeBytes(0x00, 0x0000)
+        self.sendData(cmd)
+
+    # 设置回传速率为200Hz
+    def set_transmission_rate200(self):
+        cmd = self.get_writeBytes(0x03, 0x000B)
+        self.sendData(cmd)
+
+    # 设置回传速率为100Hz
+    def set_transmission_rate100(self):
+        cmd = self.get_writeBytes(0x03, 0x0009)
+        self.sendData(cmd)
+
+
+    # 设置姿态解算算法为 9轴（磁场解算航向角）
+    def set_algorithm_9axis(self):
+        cmd = self.get_writeBytes(0x24, 0x0000)
+        self.sendData(cmd)
+
+    # 设置姿态解算算法为 6轴（积分解算航向角）
+    def set_algorithm_6axis(self):
+        cmd = self.get_writeBytes(0x24, 0x0001)
         self.sendData(cmd)
