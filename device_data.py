@@ -1,18 +1,6 @@
 # device_data.py
-import time
+# 声明数据结构变量、中间变量
 from dataclasses import dataclass
-
-from data_buffer import update_buffers
-from device_model import DeviceModel
-import asyncio
-import threading
-from threading import Event
-
-def on_data_received(device):
-    update_callback(device)
-    update_buffers(latest_sensor_data)
-    if not device_ready.is_set():
-        device_ready.set()
 
 @dataclass
 class SensorData:
@@ -27,43 +15,4 @@ class SensorData:
     yaw: float
 
 # 全局变量
-# 初始化 latest_sensor_data 为 None
 latest_sensor_data = None
-
-device_ready = threading.Event()
-
-def update_callback(device: DeviceModel):
-    timestamp = time.time()
-    global latest_sensor_data
-    latest_sensor_data = SensorData(
-        acc_x=device.get("AccX") or 0.0,
-        acc_y=device.get("AccY") or 0.0,
-        acc_z=device.get("AccZ") or 0.0,
-        gyro_x=device.get("AsX") or 0.0,
-        gyro_y=device.get("AsY") or 0.0,
-        gyro_z=device.get("AsZ") or 0.0,
-        roll=device.get("AngX") or 0.0,
-        pitch=device.get("AngY") or 0.0,
-        yaw=device.get("AngZ") or 0.0
-    )
-    device_ready.set()
-
-# device_data.py
-def start_ble_device(mac_address: str):
-    async def _runner():
-        from bleak import BleakScanner
-        print(f"Connecting to device: {mac_address}")
-        ble_device = await BleakScanner.find_device_by_address(mac_address, timeout=20)
-        if ble_device is None:
-            print("Device not found")
-            return
-
-        device = DeviceModel("RealIMU", ble_device, on_data_received)
-
-        await device.openDevice()
-
-    def _thread_entry():
-        asyncio.run(_runner())
-
-    thread = threading.Thread(target=_thread_entry, daemon=True)
-    thread.start()
