@@ -10,18 +10,44 @@ roll_data = []; pitch_data = []; yaw_data = []
 velocity_x_data = []; velocity_y_data = []; velocity_z_data = []
 displacement_x_data = []; displacement_y_data = []; displacement_z_data = []
 
+def is_zero_velocity(acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z):
+    # 角速度阈值（degree/s）: 判断是否旋转
+    GYRO_THRESHOLD = 5
+
+    # 加速度扰动阈值：判断是否受运动干扰
+    ACC_VARIANCE_THRESHOLD = 0.05  # 小幅抖动视为静止
+
+    # 计算角速度模长
+    gyro_magnitude = np.sqrt(gyro_x**2 + gyro_y**2 + gyro_z**2)
+
+    # 计算加速度与重力方向的偏差（即去重后的加速度大小）
+    # pure_acc = a - g_sensor 已经在 update_buffers 中计算过了
+    # 所以这里简化为使用原始加速度向量模长判断（也可以更精确地用纯加速度）
+
+    acc = np.sqrt(acc_x**2 + acc_y**2 + acc_z**2)
+
+    # 判断逻辑
+    if gyro_magnitude < GYRO_THRESHOLD and acc < ACC_VARIANCE_THRESHOLD:
+        return True  # 零速状态
+    else:
+        return False
+
 ### 更新原始IMU数据到缓冲区 ###
 def update_buffers(data):
     absolute_acc = remove_gravity(data.acc_x, data.acc_y, data.acc_z, data.roll, data.pitch, data.yaw) # 将视加速度转化为传感器质心在地惯系下的绝对加速度
     acc_x_data.append(absolute_acc[0]); acc_y_data.append(absolute_acc[1]); acc_z_data.append(absolute_acc[2])
-
+    gyro_x_data.append(data.gyro_x); gyro_y_data.append(data.gyro_y); gyro_z_data.append(data.gyro_z)
+    zero_vel = is_zero_velocity(acc_x_data[-1], acc_y_data[-1], acc_z_data[-1], gyro_x_data[-1], gyro_y_data[-1], gyro_z_data[-1])
     # 梯形积分计算速度
     if len(velocity_x_data) == 0:
         vx, vy, vz = 0.0, 0.0, 0.0
     else:
         dvx = (acc_x_data[-1] + acc_x_data[-2]) * dt / 2; dvy = (acc_y_data[-1] + acc_y_data[-2]) * dt / 2; dvz = (acc_z_data[-1] + acc_z_data[-2]) * dt /2 # 梯形积分
         vx = velocity_x_data[-1] + dvx; vy = velocity_y_data[-1] + dvy; vz = velocity_z_data[-1] + dvz # 速度累加
-    velocity_x_data.append(vx); velocity_y_data.append(vy); velocity_z_data.append(vz)
+    if zero_vel:
+        velocity_x_data.append(0); velocity_y_data.append(0); velocity_z_data.append(0)
+    else:
+        velocity_x_data.append(vx); velocity_y_data.append(vy); velocity_z_data.append(vz)
 
     # 再次积分计算位移
     if len(displacement_x_data) == 0:
