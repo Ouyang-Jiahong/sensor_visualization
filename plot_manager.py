@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
+import pyqtgraph.opengl as gl  # 用于 3D 绘图
 
 # 导入数据缓冲区（必须保证 data_buffer.py 在同一目录下）
 from data_buffer import (
@@ -26,6 +27,22 @@ def run_plot():
     p_acc = win.addPlot(row=0, col=0, title="Acceleration (m/s²)")
     p_vel = win.addPlot(row=2, col=0, title="Velocity (m/s)")
     p_disp = win.addPlot(row=3, col=0, title="Displacement (m)")
+
+    # === 创建一个 OpenGL 的 3D 窗口 ===
+    win_3d = gl.GLViewWidget()
+    win_3d.setWindowTitle('3D Trajectory')
+    win_3d.setGeometry(100, 100, 800, 600)
+    win_3d.show()
+
+    # 设置坐标系网格
+    grid = gl.GLGridItem()
+    grid.scale(0.5, 0.5, 0.5)  # 可调整缩放比例
+    win_3d.addItem(grid)
+
+    # 初始化轨迹线对象
+    path_data = np.zeros((1, 3))
+    trajectory = gl.GLLinePlotItem(pos=path_data, color=(1, 0, 0, 1), width=2, antialias=True)
+    win_3d.addItem(trajectory)
 
     # 曲线对象
     curve_acc_x = p_acc.plot(pen='r', name="X")
@@ -56,6 +73,41 @@ def run_plot():
         curve_disp_x.setData(displacement_x_data[-600:])
         curve_disp_y.setData(displacement_y_data[-600:])
         curve_disp_z.setData(displacement_z_data[-600:])
+
+        # 获取最新的 x, y, z 值
+        latest_x = displacement_x_data[-1]
+        latest_y = displacement_y_data[-1]
+        latest_z = displacement_z_data[-1]
+
+        # 判断最新点是否是“异常接近于 0”的情况
+        threshold = 1e-5  # 可根据实际数据调整这个阈值
+        if abs(latest_x) < threshold and abs(latest_y) < threshold and abs(latest_z) < threshold:
+            print("Skipping update: latest point is close to (0, 0, 0)")
+        else:
+            # 合并成 Nx3 数组
+            path = np.column_stack((
+                displacement_x_data,
+                displacement_y_data,
+                displacement_z_data
+            )).astype(np.float32)
+
+            # 检查 NaN/Inf 并替换为 0
+            if np.isnan(path).any() or np.isinf(path).any():
+                path = np.nan_to_num(path, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # 检查整个路径是否全是 0
+            if np.allclose(path, 0):
+                print("Warning: All zeros in path data, skipping update.")
+            else:
+                print("Updating trajectory with shape:", path.shape)
+                try:
+                    # 注意：GLLinePlotItem 接受 (N, 3)，通常不需要 .T
+                    trajectory.setData(pos=path)
+                except Exception as e:
+                    print("Error setting trajectory data:", str(e))
+
+
+        # trajectory.setData(pos=path.T)
 
     # 启动定时器
     timer = QtCore.QTimer()
