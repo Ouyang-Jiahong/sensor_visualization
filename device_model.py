@@ -5,6 +5,7 @@ import struct
 import bleak
 import asyncio
 
+dt = 0.005
 
 # 设备实例 Device instance
 class DeviceModel:
@@ -85,9 +86,14 @@ class DeviceModel:
                 print("Initializing sensor settings...")
 
                 # 启动 writeReg 初始化配置
-                self.set_algorithm_6axis()  # 设置为6轴算法
-                # self.set_transmission_rate200()  # 设置传输速率为200Hz
-                self.set_transmission_rate100()  # 设置传输速率为100Hz
+                # self.set_algorithm_6axis()  # 设置为6轴算法
+                self.set_algorithm_9axis()  # 设置为9轴算法
+                if dt == 0.005:
+                    self.set_transmission_rate200()  # 设置传输速率为200Hz
+                    print("Transmission rate set to 200 Hz")
+                if dt == 0.01:
+                    self.set_transmission_rate100()  # 设置传输速率为100Hz
+                    print("Transmission rate set to 100 Hz")
                 # 可以继续添加其他配置
 
                 print("Initialization complete.")
