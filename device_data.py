@@ -7,20 +7,15 @@ from device_model import DeviceModel
 import asyncio
 import threading
 from threading import Event
-from motion_processor import process_motion_data
-
-device_ready = Event()
 
 def on_data_received(device):
     update_callback(device)
     update_buffers(latest_sensor_data)
-    process_motion_data()
     if not device_ready.is_set():
         device_ready.set()
 
 @dataclass
 class SensorData:
-    timestamp: float
     acc_x: float
     acc_y: float
     acc_z: float
@@ -41,7 +36,6 @@ def update_callback(device: DeviceModel):
     timestamp = time.time()
     global latest_sensor_data
     latest_sensor_data = SensorData(
-        timestamp=timestamp,
         acc_x=device.get("AccX") or 0.0,
         acc_y=device.get("AccY") or 0.0,
         acc_z=device.get("AccZ") or 0.0,
